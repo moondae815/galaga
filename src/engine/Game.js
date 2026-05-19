@@ -1,6 +1,7 @@
 import { Starfield } from '../entities/Starfield.js';
 import { Player } from '../entities/Player.js';
 import { Enemy } from '../entities/Enemy.js';
+import { Particle } from '../entities/Particle.js';
 
 export class Game {
     constructor(canvasId) {
@@ -13,6 +14,7 @@ export class Game {
         this.player = new Player(this.width, this.height);
         this.bullets = [];
         this.enemies = [];
+        this.particles = [];
         this.score = 0;
         this.highScore = this.loadHighScore();
         this.gameState = 'START';
@@ -20,6 +22,9 @@ export class Game {
         this.lives = 3;
         this.lastTime = 0;
         this.keys = {};
+
+        this.shakeTimer = 0;
+        this.shakeIntensity = 5;
 
         this.initInput();
         this.createFormation();
@@ -132,6 +137,7 @@ export class Game {
         this.bullets.forEach(bullet => bullet.update(deltaTime));
         const playerX = this.player.active ? this.player.x + this.player.width / 2 : undefined;
         this.enemies.forEach(enemy => enemy.update(deltaTime, playerX, this.height));
+        this.particles.forEach(particle => particle.update(deltaTime));
 
         // 2. Collision Check
         this.checkCollisions();
@@ -139,6 +145,13 @@ export class Game {
         // 3. Filter inactive entities
         this.bullets = this.bullets.filter(bullet => bullet.active);
         this.enemies = this.enemies.filter(enemy => enemy.active);
+        this.particles = this.particles.filter(particle => particle.active);
+
+        // Update shake timer
+        if (this.shakeTimer > 0) {
+            this.shakeTimer -= deltaTime;
+            if (this.shakeTimer < 0) this.shakeTimer = 0;
+        }
 
         // Stage transition check
         if (this.gameState === 'PLAY' && this.enemies.length === 0) {
@@ -169,6 +182,18 @@ export class Game {
                     bullet.active = false;
                     enemy.active = false;
                     this.score += enemy.score;
+
+                    // Create explosion particles
+                    for (let i = 0; i < 15; i++) {
+                        this.particles.push(new Particle(
+                            enemy.x + enemy.width / 2,
+                            enemy.y + enemy.height / 2,
+                            enemy.color
+                        ));
+                    }
+
+                    // Trigger screen shake
+                    this.shakeTimer = 200;
 
                     // Update high score
                     if (this.score > this.highScore) {
@@ -213,6 +238,15 @@ export class Game {
     }
 
     draw() {
+        this.ctx.save();
+
+        // Screen shake
+        if (this.shakeTimer > 0) {
+            const offsetX = (Math.random() - 0.5) * 2 * this.shakeIntensity;
+            const offsetY = (Math.random() - 0.5) * 2 * this.shakeIntensity;
+            this.ctx.translate(offsetX, offsetY);
+        }
+
         // Clear canvas
         this.ctx.fillStyle = 'black';
         this.ctx.fillRect(0, 0, this.width, this.height);
@@ -230,10 +264,17 @@ export class Game {
             if (bullet.active) bullet.draw(this.ctx);
         });
 
+        // Draw particles
+        this.particles.forEach(particle => {
+            particle.draw(this.ctx);
+        });
+
         // Draw player
         if (this.player.active) {
             this.player.draw(this.ctx);
         }
+
+        this.ctx.restore();
 
         // --- UI ---
         const uiPadding = 20;
