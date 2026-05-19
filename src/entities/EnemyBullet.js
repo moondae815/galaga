@@ -7,13 +7,12 @@ export class EnemyBullet extends Entity {
         super(x, y, width, height, speedY);
     }
 
-    update(deltaTime) {
+    update(deltaTime, screenHeight = 800) {
         const speedMultiplier = deltaTime / 16.67;
         this.y += this.speed * speedMultiplier;
 
         // Deactivate if it goes off-screen (bottom)
-        // Using a generous margin for screen height, though it will be filtered in Game.js
-        if (this.y > 1000) {
+        if (this.y > screenHeight) {
             this.active = false;
         }
     }
