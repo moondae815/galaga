@@ -14,9 +14,23 @@ export class Player extends Entity {
         this.canvasHeight = canvasHeight;
         this.shootCooldown = 200; // ms
         this.shootTimer = 0;
+        
+        // Invincibility properties
+        this.invincible = false;
+        this.invincibleTimer = 0;
+        this.invincibleDuration = 2000; // 2 seconds
     }
 
     update(deltaTime, keys) {
+        // Update invincibility timer
+        if (this.invincible) {
+            this.invincibleTimer -= deltaTime;
+            if (this.invincibleTimer <= 0) {
+                this.invincible = false;
+                this.invincibleTimer = 0;
+            }
+        }
+
         const speedMultiplier = deltaTime / 16.67;
         const currentSpeed = this.speed * speedMultiplier;
 
@@ -65,13 +79,6 @@ export class Player extends Entity {
         ctx.beginPath();
         ctx.moveTo(this.x + this.width / 2, this.y);
         ctx.lineTo(this.x, this.y + this.height);
-        ctx.lineTo(this.x + this.width, this.y + this.height);
-        ctx.closePath();
-        ctx.fill();
-    }
-}
-
-eight);
         ctx.lineTo(this.x + this.width, this.y + this.height);
         ctx.closePath();
         ctx.fill();

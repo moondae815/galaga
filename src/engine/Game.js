@@ -13,6 +13,7 @@ export class Game {
         this.starfield = new Starfield(this.width, this.height);
         this.player = new Player(this.width, this.height);
         this.bullets = [];
+        this.enemyBullets = [];
         this.enemies = [];
         this.particles = [];
         this.score = 0;
@@ -36,6 +37,7 @@ export class Game {
         this.lives = 3;
         this.enemies = [];
         this.bullets = [];
+        this.enemyBullets = [];
         this.player = new Player(this.width, this.height);
         this.gameState = 'PLAY';
         this.createFormation();
@@ -103,6 +105,7 @@ export class Game {
         this.currentStage++;
         this.enemies = [];
         this.bullets = [];
+        this.enemyBullets = [];
         this.createFormation();
     }
 
@@ -135,8 +138,15 @@ export class Game {
 
         // 1. Update all entities
         this.bullets.forEach(bullet => bullet.update(deltaTime));
+        this.enemyBullets.forEach(bullet => bullet.update(deltaTime));
+        
         const playerX = this.player.active ? this.player.x + this.player.width / 2 : undefined;
-        this.enemies.forEach(enemy => enemy.update(deltaTime, playerX, this.height));
+        this.enemies.forEach(enemy => {
+            const firedBullet = enemy.update(deltaTime, playerX, this.height);
+            if (firedBullet) {
+                this.enemyBullets.push(firedBullet);
+            }
+        });
         this.particles.forEach(particle => particle.update(deltaTime));
 
         // 2. Collision Check
@@ -144,6 +154,7 @@ export class Game {
 
         // 3. Filter inactive entities
         this.bullets = this.bullets.filter(bullet => bullet.active);
+        this.enemyBullets = this.enemyBullets.filter(bullet => bullet.active);
         this.enemies = this.enemies.filter(enemy => enemy.active);
         this.particles = this.particles.filter(particle => particle.active);
 
@@ -214,6 +225,22 @@ export class Game {
                 break;
             }
         }
+
+        // Enemy Bullet vs Player
+        for (const bullet of this.enemyBullets) {
+            if (!bullet.active) continue;
+            const bulletBounds = bullet.getBounds();
+
+            if (bulletBounds.x < playerBounds.x + playerBounds.width &&
+                bulletBounds.x + bulletBounds.width > playerBounds.x &&
+                bulletBounds.y < playerBounds.y + playerBounds.height &&
+                bulletBounds.y + bulletBounds.height > playerBounds.y) {
+                
+                bullet.active = false;
+                this.handlePlayerHit();
+                break;
+            }
+        }
     }
 
     handlePlayerHit() {
@@ -261,6 +288,11 @@ export class Game {
 
         // Draw bullets
         this.bullets.forEach(bullet => {
+            if (bullet.active) bullet.draw(this.ctx);
+        });
+
+        // Draw enemy bullets
+        this.enemyBullets.forEach(bullet => {
             if (bullet.active) bullet.draw(this.ctx);
         });
 

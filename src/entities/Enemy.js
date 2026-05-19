@@ -1,4 +1,5 @@
 import { Entity } from './Entity.js';
+import { EnemyBullet } from './EnemyBullet.js';
 
 export const ENEMY_TYPES = {
     RED: { color: '#ff0000', score: 100 },
@@ -32,15 +33,22 @@ export class Enemy extends Entity {
         
         // Attack probability - increases with stage
         this.attackProbability = 0.0005 + (stage - 1) * 0.0002;
+
+        // Shooting logic - more frequent with stage
+        this.shootTimer = 0;
+        this.shootInterval = Math.max(500, 2000 - (stage - 1) * 200); // Minimum 500ms
     }
 
     update(deltaTime, playerX, screenHeight) {
+        let firedBullet = null;
+
         if (this.state === 'IDLE') {
             this.oscillationAngle += this.oscillationSpeed * deltaTime;
             this.x = this.baseX + Math.sin(this.oscillationAngle) * this.oscillationRange;
 
             if (Math.random() < this.attackProbability) {
                 this.state = 'ATTACKING';
+                this.shootTimer = this.shootInterval * 0.5; // Ready to shoot soon after starting attack
             }
         } else if (this.state === 'ATTACKING') {
             // Move down faster - applying deltaTime
@@ -54,6 +62,13 @@ export class Enemy extends Entity {
                 if (Math.abs(diffX) > 5) {
                     this.x += Math.sign(diffX) * speedPerMs * 0.75 * deltaTime;
                 }
+            }
+
+            // Shooting logic while attacking
+            this.shootTimer -= deltaTime;
+            if (this.shootTimer <= 0) {
+                firedBullet = this.shoot();
+                this.shootTimer = this.shootInterval;
             }
 
             // If off screen, start returning from top
@@ -83,6 +98,15 @@ export class Enemy extends Entity {
                 this.state = 'IDLE';
             }
         }
+
+        return firedBullet;
+    }
+
+    shoot() {
+        const bulletX = this.x + this.width / 2 - 2;
+        const bulletY = this.y + this.height;
+        const bulletSpeed = 4 + (this.stage - 1) * 0.5; // Bullets get faster with stage
+        return new EnemyBullet(bulletX, bulletY, bulletSpeed);
     }
 
     draw(ctx) {
