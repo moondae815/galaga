@@ -78,6 +78,13 @@ export class Game {
         }
     }
 
+    nextStage() {
+        this.currentStage++;
+        this.enemies = [];
+        this.bullets = [];
+        this.createFormation();
+    }
+
     start() {
         this.lastTime = performance.now();
         requestAnimationFrame(this.gameLoop.bind(this));
@@ -116,6 +123,11 @@ export class Game {
         // 3. Filter inactive entities
         this.bullets = this.bullets.filter(bullet => bullet.active);
         this.enemies = this.enemies.filter(enemy => enemy.active);
+
+        // Stage transition check
+        if (this.gameState === 'PLAY' && this.enemies.length === 0) {
+            this.nextStage();
+        }
     }
 
     checkCollisions() {
@@ -206,7 +218,14 @@ export class Game {
         this.ctx.fillStyle = 'white';
         this.ctx.fillText(this.highScore.toString().padStart(6, '0'), this.width / 2, 30);
 
-        // 3. LIFE (Right Bottom)
+        // 3. STAGE (Right Top)
+        this.ctx.textAlign = 'right';
+        this.ctx.fillStyle = '#00ffff';
+        this.ctx.fillText('STAGE', this.width - uiPadding, 10);
+        this.ctx.fillStyle = 'white';
+        this.ctx.fillText(this.currentStage.toString(), this.width - uiPadding, 30);
+
+        // 4. LIFE (Right Bottom)
         const lifeSize = 20;
         const lifeX = this.width - uiPadding - lifeSize;
         const lifeY = this.height - uiPadding - lifeSize;
