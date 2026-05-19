@@ -17,10 +17,22 @@ export class Game {
         this.highScore = this.loadHighScore();
         this.gameState = 'START';
         this.currentStage = 1;
+        this.lives = 3;
         this.lastTime = 0;
         this.keys = {};
 
         this.initInput();
+        this.createFormation();
+    }
+
+    resetGame() {
+        this.score = 0;
+        this.currentStage = 1;
+        this.lives = 3;
+        this.enemies = [];
+        this.bullets = [];
+        this.player = new Player(this.width, this.height);
+        this.gameState = 'PLAY';
         this.createFormation();
     }
 
@@ -45,8 +57,12 @@ export class Game {
     initInput() {
         window.addEventListener('keydown', (e) => {
             this.keys[e.code] = true;
-            if (e.code === 'Space' && this.gameState === 'START') {
-                this.gameState = 'PLAY';
+            if (e.code === 'Space') {
+                if (this.gameState === 'START') {
+                    this.gameState = 'PLAY';
+                } else if (this.gameState === 'GAMEOVER') {
+                    this.resetGame();
+                }
             }
         });
         window.addEventListener('keyup', (e) => {
@@ -73,7 +89,7 @@ export class Game {
             for (let col = 0; col < cols; col++) {
                 const x = startX + col * (enemyWidth + spacingX);
                 const y = startY + row * (enemyHeight + spacingY);
-                this.enemies.push(new Enemy(x, y, type));
+                this.enemies.push(new Enemy(x, y, type, this.currentStage));
             }
         }
     }
@@ -169,8 +185,21 @@ export class Game {
                 playerBounds.y < enemyBounds.y + enemyBounds.height &&
                 playerBounds.y + playerBounds.height > enemyBounds.y) {
                 
-                this.player.active = false;
-                this.gameState = 'GAMEOVER';
+                this.lives--;
+                if (this.lives <= 0) {
+                    this.player.active = false;
+                    this.gameState = 'GAMEOVER';
+                } else {
+                    // Reset player position and clear enemies currently attacking to give player a chance
+                    this.player.x = (this.width - this.player.width) / 2;
+                    this.enemies.forEach(e => {
+                        if (e.state === 'ATTACKING') {
+                            e.state = 'RETURNING';
+                        }
+                    });
+                    // Simple invulnerability or just a brief pause could be added, 
+                    // but for now just resetting position and state.
+                }
                 break;
             }
         }
@@ -201,6 +230,8 @@ export class Game {
 
         // --- UI ---
         const uiPadding = 20;
+        
+        // Ensure consistent text style for UI
         this.ctx.font = '18px "Courier New", Courier, monospace';
         this.ctx.textBaseline = 'top';
         
@@ -230,42 +261,48 @@ export class Game {
         const lifeX = this.width - uiPadding - lifeSize;
         const lifeY = this.height - uiPadding - lifeSize;
         
-        this.ctx.fillStyle = '#00ff00';
-        this.ctx.beginPath();
-        this.ctx.moveTo(lifeX + lifeSize / 2, lifeY);
-        this.ctx.lineTo(lifeX, lifeY + lifeSize);
-        this.ctx.lineTo(lifeX + lifeSize, lifeY + lifeSize);
-        this.ctx.closePath();
-        this.ctx.fill();
+        // Draw life icons based on this.lives
+        for (let i = 0; i < this.lives; i++) {
+            const x = lifeX - (i * (lifeSize + 5));
+            this.ctx.fillStyle = '#00ff00';
+            this.ctx.beginPath();
+            this.ctx.moveTo(x + lifeSize / 2, lifeY);
+            this.ctx.lineTo(x, lifeY + lifeSize);
+            this.ctx.lineTo(x + lifeSize, lifeY + lifeSize);
+            this.ctx.closePath();
+            this.ctx.fill();
+        }
         
         this.ctx.fillStyle = 'white';
         this.ctx.font = '14px "Courier New", Courier, monospace';
         this.ctx.textAlign = 'right';
         this.ctx.textBaseline = 'middle';
-        this.ctx.fillText('LIFE', lifeX - 5, lifeY + lifeSize / 2);
+        this.ctx.fillText('LIFE', lifeX - (this.lives * (lifeSize + 5)) + lifeSize - 5, lifeY + lifeSize / 2);
 
         // Draw Game Over or Title Screen
         if (this.gameState === 'START') {
-            this.ctx.textBaseline = 'alphabetic';
             this.ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
             this.ctx.fillRect(0, 0, this.width, this.height);
 
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+            
             this.ctx.fillStyle = '#ffff00';
             this.ctx.font = 'bold 50px "Courier New", Courier, monospace';
-            this.ctx.textAlign = 'center';
             this.ctx.fillText('GALAGA CLONE', this.width / 2, this.height / 2 - 20);
             
             this.ctx.fillStyle = 'white';
             this.ctx.font = '24px "Courier New", Courier, monospace';
             this.ctx.fillText('PRESS SPACE TO START', this.width / 2, this.height / 2 + 40);
         } else if (this.gameState === 'GAMEOVER') {
-            this.ctx.textBaseline = 'alphabetic'; // Reset baseline for centered text
             this.ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
             this.ctx.fillRect(0, 0, this.width, this.height);
 
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+
             this.ctx.fillStyle = '#ff0000';
             this.ctx.font = 'bold 50px "Courier New", Courier, monospace';
-            this.ctx.textAlign = 'center';
             this.ctx.fillText('GAME OVER', this.width / 2, this.height / 2 - 20);
             
             this.ctx.fillStyle = 'white';
@@ -279,7 +316,7 @@ export class Game {
 
             this.ctx.fillStyle = '#aaa';
             this.ctx.font = '18px "Courier New", Courier, monospace';
-            this.ctx.fillText('Press F5 to Restart', this.width / 2, this.height / 2 + 130);
+            this.ctx.fillText('PRESS SPACE TO RESTART', this.width / 2, this.height / 2 + 130);
         }
     }
 }
