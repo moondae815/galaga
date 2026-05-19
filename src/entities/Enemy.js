@@ -31,14 +31,14 @@ export class Enemy extends Entity {
             this.oscillationAngle += this.oscillationSpeed * deltaTime;
             this.x = this.baseX + Math.sin(this.oscillationAngle) * this.oscillationRange;
 
-            // Very low chance to attack per frame
-            if (Math.random() < 0.0002) {
+            // Increase probability from 0.0002 to 0.0005 for more action
+            if (Math.random() < 0.0005) {
                 this.state = 'ATTACKING';
             }
         } else if (this.state === 'ATTACKING') {
             // Move down faster - applying deltaTime
             const speedPerMs = this.speed / 16.67;
-            this.y += speedPerMs * 1.5 * deltaTime;
+            this.y += speedPerMs * 2.0 * deltaTime;
 
             // Slight tracking of player
             if (playerX !== undefined) {

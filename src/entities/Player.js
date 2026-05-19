@@ -12,7 +12,7 @@ export class Player extends Entity {
         super(x, y, width, height, speed);
         this.canvasWidth = canvasWidth;
         this.canvasHeight = canvasHeight;
-        this.shootCooldown = 250; // ms
+        this.shootCooldown = 200; // ms
         this.shootTimer = 0;
     }
 
