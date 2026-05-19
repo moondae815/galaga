@@ -1,5 +1,6 @@
 import { Starfield } from '../entities/Starfield.js';
 import { Player } from '../entities/Player.js';
+import { Enemy } from '../entities/Enemy.js';
 
 export class Game {
     constructor(canvasId) {
@@ -11,10 +12,12 @@ export class Game {
         this.starfield = new Starfield(this.width, this.height);
         this.player = new Player(this.width, this.height);
         this.bullets = [];
+        this.enemies = [];
         this.lastTime = 0;
         this.keys = {};
 
         this.initInput();
+        this.createFormation();
     }
 
     initInput() {
@@ -24,6 +27,30 @@ export class Game {
         window.addEventListener('keyup', (e) => {
             this.keys[e.code] = false;
         });
+    }
+
+    createFormation() {
+        const rows = 5;
+        const cols = 8;
+        const enemyWidth = 30;
+        const enemyHeight = 30;
+        const spacingX = 20;
+        const spacingY = 20;
+        
+        const totalWidth = (cols * enemyWidth) + ((cols - 1) * spacingX);
+        const startX = (this.width - totalWidth) / 2;
+        const startY = 50;
+
+        const rowTypes = ['BOSS', 'RED', 'RED', 'BLUE', 'BLUE'];
+
+        for (let row = 0; row < rows; row++) {
+            const type = rowTypes[row];
+            for (let col = 0; col < cols; col++) {
+                const x = startX + col * (enemyWidth + spacingX);
+                const y = startY + row * (enemyHeight + spacingY);
+                this.enemies.push(new Enemy(x, y, type));
+            }
+        }
     }
 
     start() {
@@ -54,6 +81,9 @@ export class Game {
             bullet.update(deltaTime);
             return bullet.active;
         });
+
+        // Update enemies
+        this.enemies.forEach(enemy => enemy.update(deltaTime));
     }
 
     draw() {
@@ -63,6 +93,9 @@ export class Game {
         
         // Draw starfield
         this.starfield.draw(this.ctx);
+
+        // Draw enemies
+        this.enemies.forEach(enemy => enemy.draw(this.ctx));
 
         // Draw bullets
         this.bullets.forEach(bullet => bullet.draw(this.ctx));
