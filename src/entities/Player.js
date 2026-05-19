@@ -51,12 +51,27 @@ export class Player extends Entity {
     }
 
     draw(ctx) {
+        // Flickering effect when invincible
+        if (this.invincible) {
+            // Blink every 100ms
+            if (Math.floor(this.invincibleTimer / 100) % 2 === 0) {
+                return;
+            }
+        }
+
         ctx.fillStyle = '#00ff00';
 
         // Simple ship shape (triangle)
         ctx.beginPath();
         ctx.moveTo(this.x + this.width / 2, this.y);
         ctx.lineTo(this.x, this.y + this.height);
+        ctx.lineTo(this.x + this.width, this.y + this.height);
+        ctx.closePath();
+        ctx.fill();
+    }
+}
+
+eight);
         ctx.lineTo(this.x + this.width, this.y + this.height);
         ctx.closePath();
         ctx.fill();

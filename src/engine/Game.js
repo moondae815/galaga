@@ -147,7 +147,7 @@ export class Game {
     }
 
     checkCollisions() {
-        if (!this.player.active) return;
+        if (!this.player.active || this.player.invincible) return;
 
         const playerBounds = this.player.getBounds();
 
@@ -185,23 +185,30 @@ export class Game {
                 playerBounds.y < enemyBounds.y + enemyBounds.height &&
                 playerBounds.y + playerBounds.height > enemyBounds.y) {
                 
-                this.lives--;
-                if (this.lives <= 0) {
-                    this.player.active = false;
-                    this.gameState = 'GAMEOVER';
-                } else {
-                    // Reset player position and clear enemies currently attacking to give player a chance
-                    this.player.x = (this.width - this.player.width) / 2;
-                    this.enemies.forEach(e => {
-                        if (e.state === 'ATTACKING') {
-                            e.state = 'RETURNING';
-                        }
-                    });
-                    // Simple invulnerability or just a brief pause could be added, 
-                    // but for now just resetting position and state.
-                }
+                this.handlePlayerHit();
                 break;
             }
+        }
+    }
+
+    handlePlayerHit() {
+        this.lives--;
+        if (this.lives <= 0) {
+            this.player.active = false;
+            this.gameState = 'GAMEOVER';
+        } else {
+            // Reset player position and set invincibility
+            this.player.x = (this.width - this.player.width) / 2;
+            this.player.y = this.height - this.player.height - 20;
+            this.player.invincible = true;
+            this.player.invincibleTimer = this.player.invincibleDuration;
+
+            // Clear enemies currently attacking to give player a chance
+            this.enemies.forEach(e => {
+                if (e.state === 'ATTACKING') {
+                    e.state = 'RETURNING';
+                }
+            });
         }
     }
 
