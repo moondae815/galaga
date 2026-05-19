@@ -5,6 +5,7 @@ export class Entity {
         this.width = width;
         this.height = height;
         this.speed = speed;
+        this.active = true;
     }
 
     update(deltaTime) {

@@ -6,7 +6,6 @@ export class Bullet extends Entity {
         const height = 10;
         const speed = 7; // Pixels per frame at 60fps
         super(x, y, width, height, speed);
-        this.active = true;
     }
 
     update(deltaTime) {
