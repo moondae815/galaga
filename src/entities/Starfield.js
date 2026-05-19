@@ -14,9 +14,13 @@ export class Starfield {
         }
     }
 
-    update() {
+    update(deltaTime) {
+        // Adjust speed based on deltaTime (assuming 60fps as base, or just use pixels per ms)
+        // Let's use pixels per frame at 60fps as base: speed * (deltaTime / 16.67)
+        const speedMultiplier = deltaTime / 16.67;
+        
         for (let star of this.stars) {
-            star.y += star.speed;
+            star.y += star.speed * speedMultiplier;
             if (star.y > this.height) {
                 star.y = 0;
                 star.x = Math.random() * this.width;
@@ -27,9 +31,7 @@ export class Starfield {
     draw(ctx) {
         ctx.fillStyle = 'white';
         for (let star of this.stars) {
-            ctx.beginPath();
-            ctx.arc(star.x, star.y, star.size / 2, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.fillRect(star.x, star.y, star.size, star.size);
         }
     }
 }
