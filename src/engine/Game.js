@@ -10,6 +10,7 @@ export class Game {
         
         this.starfield = new Starfield(this.width, this.height);
         this.player = new Player(this.width, this.height);
+        this.bullets = [];
         this.lastTime = 0;
         this.keys = {};
 
@@ -42,7 +43,17 @@ export class Game {
 
     update(deltaTime) {
         this.starfield.update(deltaTime);
-        this.player.update(deltaTime, this.keys);
+        
+        const newBullet = this.player.update(deltaTime, this.keys);
+        if (newBullet) {
+            this.bullets.push(newBullet);
+        }
+
+        // Update bullets
+        this.bullets.forEach(bullet => bullet.update(deltaTime));
+
+        // Remove inactive bullets
+        this.bullets = this.bullets.filter(bullet => bullet.active);
     }
 
     draw() {
@@ -52,6 +63,9 @@ export class Game {
         
         // Draw starfield
         this.starfield.draw(this.ctx);
+
+        // Draw bullets
+        this.bullets.forEach(bullet => bullet.draw(this.ctx));
 
         // Draw player
         this.player.draw(this.ctx);

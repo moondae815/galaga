@@ -1,4 +1,5 @@
 import { Entity } from './Entity.js';
+import { Bullet } from './Bullet.js';
 
 export class Player extends Entity {
     constructor(canvasWidth, canvasHeight) {
@@ -11,6 +12,8 @@ export class Player extends Entity {
         super(x, y, width, height, speed);
         this.canvasWidth = canvasWidth;
         this.canvasHeight = canvasHeight;
+        this.shootCooldown = 250; // ms
+        this.shootTimer = 0;
     }
 
     update(deltaTime, keys) {
@@ -31,17 +34,31 @@ export class Player extends Entity {
         if (this.x + this.width > this.canvasWidth) {
             this.x = this.canvasWidth - this.width;
         }
-    }
 
-    draw(ctx) {
-        ctx.fillStyle = '#00ff00';
-        
-        // Simple ship shape (triangle)
-        ctx.beginPath();
-        ctx.moveTo(this.x + this.width / 2, this.y);
-        ctx.lineTo(this.x, this.y + this.height);
-        ctx.lineTo(this.x + this.width, this.y + this.height);
-        ctx.closePath();
-        ctx.fill();
+        // Shooting logic
+        this.shootTimer += deltaTime;
+        if (keys['Space'] && this.shootTimer >= this.shootCooldown) {
+            this.shootTimer = 0;
+            return this.shoot();
+        }
+        return null;
     }
+shoot() {
+    const bulletX = this.x + this.width / 2 - 2; // Center the bullet (width 4)
+    const bulletY = this.y;
+    return new Bullet(bulletX, bulletY);
 }
+
+draw(ctx) {
+    ctx.fillStyle = '#00ff00';
+
+    // Simple ship shape (triangle)
+    ctx.beginPath();
+    ctx.moveTo(this.x + this.width / 2, this.y);
+    ctx.lineTo(this.x, this.y + this.height);
+    ctx.lineTo(this.x + this.width, this.y + this.height);
+    ctx.closePath();
+    ctx.fill();
+}
+}
+
