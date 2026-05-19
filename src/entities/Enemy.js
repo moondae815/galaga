@@ -22,11 +22,19 @@ export class Enemy extends Entity {
         this.stage = stage;
         this.color = ENEMY_TYPES[type]?.color || '#ffffff';
         this.score = ENEMY_TYPES[type]?.score || 0;
-        this.state = 'IDLE';
+        
+        this.state = 'ENTERING';
+        this.enterProgress = 0;
+        this.startX = -50;
+        this.startY = -50;
+        this.controlX = x;
+        this.controlY = y - 50;
         
         // Oscillation properties - scaled by difficulty
         this.baseX = x;
         this.baseY = y;
+        this.x = this.startX;
+        this.y = this.startY;
         this.oscillationAngle = Math.random() * Math.PI * 2;
         this.oscillationSpeed = 0.002 * difficultyMultiplier;
         this.oscillationRange = 10 * Math.min(2, difficultyMultiplier);
@@ -42,7 +50,18 @@ export class Enemy extends Entity {
     update(deltaTime, playerX, screenHeight) {
         let firedBullet = null;
 
-        if (this.state === 'IDLE') {
+        if (this.state === 'ENTERING') {
+            this.enterProgress += deltaTime / 1000;
+            if (this.enterProgress >= 1.0) {
+                this.state = 'IDLE';
+                this.x = this.baseX;
+                this.y = this.baseY;
+            } else {
+                const t = this.enterProgress;
+                this.x = Math.pow(1 - t, 2) * this.startX + 2 * (1 - t) * t * this.controlX + Math.pow(t, 2) * this.baseX;
+                this.y = Math.pow(1 - t, 2) * this.startY + 2 * (1 - t) * t * this.controlY + Math.pow(t, 2) * this.baseY;
+            }
+        } else if (this.state === 'IDLE') {
             this.oscillationAngle += this.oscillationSpeed * deltaTime;
             this.x = this.baseX + Math.sin(this.oscillationAngle) * this.oscillationRange;
 

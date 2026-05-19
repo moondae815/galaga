@@ -7,7 +7,7 @@ describe('Enemy', () => {
         const enemy = new Enemy(100, 200, 'RED', 1);
         expect(enemy.color).toBe(ENEMY_TYPES.RED.color);
         expect(enemy.score).toBe(ENEMY_TYPES.RED.score);
-        expect(enemy.state).toBe('IDLE');
+        expect(enemy.state).toBe('ENTERING');
         expect(enemy.baseX).toBe(100);
         expect(enemy.baseY).toBe(200);
     });
@@ -24,6 +24,9 @@ describe('Enemy', () => {
 
     it('should oscillate when in IDLE state', () => {
         const enemy = new Enemy(100, 200, 'BLUE', 1);
+        enemy.state = 'IDLE';
+        enemy.x = enemy.baseX;
+        enemy.y = enemy.baseY;
         enemy.oscillationAngle = 0; // Fix angle for deterministic test
         
         enemy.update(16.67, 300, 800);
@@ -34,6 +37,9 @@ describe('Enemy', () => {
 
     it('should transition to ATTACKING state with probability', () => {
         const enemy = new Enemy(100, 200, 'BLUE', 1);
+        enemy.state = 'IDLE';
+        enemy.x = enemy.baseX;
+        enemy.y = enemy.baseY;
         enemy.attackProbability = 1.0; // Force attack
         
         enemy.update(16.67, 300, 800);
@@ -44,6 +50,8 @@ describe('Enemy', () => {
     it('should move down and track player when ATTACKING', () => {
         const enemy = new Enemy(100, 200, 'BLUE', 1);
         enemy.state = 'ATTACKING';
+        enemy.x = enemy.baseX;
+        enemy.y = enemy.baseY;
         
         const playerX = 300; // Player is to the right
         enemy.update(16.67, playerX, 800);
@@ -57,6 +65,8 @@ describe('Enemy', () => {
     it('should shoot while ATTACKING', () => {
         const enemy = new Enemy(100, 200, 'BLUE', 1);
         enemy.state = 'ATTACKING';
+        enemy.x = 100;
+        enemy.y = 200;
         enemy.shootTimer = 10; // Almost ready to shoot
         
         const firedBullet = enemy.update(16.67, 300, 800);
@@ -67,6 +77,8 @@ describe('Enemy', () => {
     it('should transition to RETURNING if moves off screen bottom', () => {
         const enemy = new Enemy(100, 795, 'BLUE', 1);
         enemy.state = 'ATTACKING';
+        enemy.x = 100;
+        enemy.y = 795;
         
         enemy.update(16.67 * 5, 300, 800); // move past 800
         expect(enemy.state).toBe('RETURNING');
@@ -97,5 +109,34 @@ describe('Enemy', () => {
         expect(enemy.state).toBe('IDLE');
         expect(enemy.x).toBe(100);
         expect(enemy.y).toBe(200);
+    });
+});
+
+describe('Enemy Entering Animation', () => {
+    it('should initialize with ENTERING state and progress entering path', () => {
+        const enemy = new Enemy(100, 200, 'BLUE', 1);
+        expect(enemy.state).toBe('ENTERING');
+        expect(enemy.enterProgress).toBe(0);
+        
+        // Initial position should be off-screen
+        expect(enemy.y).toBeLessThan(0);
+        
+        // After update, progress should increase and position should change towards base
+        enemy.update(16.67, 300, 800);
+        expect(enemy.enterProgress).toBeGreaterThan(0);
+    });
+
+    it('should transition to IDLE state when entering is complete', () => {
+        const enemy = new Enemy(100, 200, 'BLUE', 1);
+        enemy.state = 'ENTERING';
+        enemy.enterProgress = 0.99; // Almost complete
+        
+        // Update enough to push progress >= 1.0
+        enemy.update(16.67 * 5, 300, 800);
+        
+        expect(enemy.enterProgress).toBeGreaterThanOrEqual(1.0);
+        expect(enemy.state).toBe('IDLE');
+        expect(enemy.x).toBe(enemy.baseX);
+        expect(enemy.y).toBe(enemy.baseY);
     });
 });
