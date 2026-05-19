@@ -118,6 +118,12 @@ export class Game {
                     bullet.active = false;
                     enemy.active = false;
                     this.score += enemy.score;
+
+                    // Update high score
+                    if (this.score > this.highScore) {
+                        this.highScore = this.score;
+                        localStorage.setItem('galaga_high_score', this.highScore.toString());
+                    }
                 }
             }
 
