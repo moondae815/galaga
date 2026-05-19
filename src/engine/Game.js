@@ -1,4 +1,5 @@
 import { Starfield } from '../entities/Starfield.js';
+import { Player } from '../entities/Player.js';
 
 export class Game {
     constructor(canvasId) {
@@ -8,7 +9,20 @@ export class Game {
         this.height = canvas.height;
         
         this.starfield = new Starfield(this.width, this.height);
+        this.player = new Player(this.width, this.height);
         this.lastTime = 0;
+        this.keys = {};
+
+        this.initInput();
+    }
+
+    initInput() {
+        window.addEventListener('keydown', (e) => {
+            this.keys[e.code] = true;
+        });
+        window.addEventListener('keyup', (e) => {
+            this.keys[e.code] = false;
+        });
     }
 
     start() {
@@ -28,6 +42,7 @@ export class Game {
 
     update(deltaTime) {
         this.starfield.update(deltaTime);
+        this.player.update(deltaTime, this.keys);
     }
 
     draw() {
@@ -37,5 +52,8 @@ export class Game {
         
         // Draw starfield
         this.starfield.draw(this.ctx);
+
+        // Draw player
+        this.player.draw(this.ctx);
     }
 }
