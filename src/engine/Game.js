@@ -14,13 +14,31 @@ export class Game {
         this.bullets = [];
         this.enemies = [];
         this.score = 0;
-        this.highScore = parseInt(localStorage.getItem('galaga_high_score')) || 0;
+        this.highScore = this.loadHighScore();
         this.isGameOver = false;
         this.lastTime = 0;
         this.keys = {};
 
         this.initInput();
         this.createFormation();
+    }
+
+    loadHighScore() {
+        try {
+            const score = localStorage.getItem('galaga_high_score');
+            return score ? parseInt(score) : 0;
+        } catch (e) {
+            console.warn('LocalStorage is not accessible:', e);
+            return 0;
+        }
+    }
+
+    saveHighScore() {
+        try {
+            localStorage.setItem('galaga_high_score', this.highScore.toString());
+        } catch (e) {
+            console.warn('Failed to save high score to LocalStorage:', e);
+        }
     }
 
     initInput() {
@@ -123,7 +141,7 @@ export class Game {
                     // Update high score
                     if (this.score > this.highScore) {
                         this.highScore = this.score;
-                        localStorage.setItem('galaga_high_score', this.highScore.toString());
+                        this.saveHighScore();
                     }
                 }
             }
@@ -166,27 +184,28 @@ export class Game {
         }
 
         // --- UI ---
+        const uiPadding = 20;
         this.ctx.font = '18px "Courier New", Courier, monospace';
+        this.ctx.textBaseline = 'top';
         
         // 1. SCORE (Left Top)
         this.ctx.textAlign = 'left';
         this.ctx.fillStyle = '#ff0000'; // Red for labels
-        this.ctx.fillText('1UP', 20, 25);
+        this.ctx.fillText('1UP', uiPadding, 10);
         this.ctx.fillStyle = 'white';
-        this.ctx.fillText(this.score.toString().padStart(6, '0'), 20, 45);
+        this.ctx.fillText(this.score.toString().padStart(6, '0'), uiPadding, 30);
 
         // 2. HIGH SCORE (Center Top)
         this.ctx.textAlign = 'center';
         this.ctx.fillStyle = '#ff0000';
-        this.ctx.fillText('HIGH SCORE', this.width / 2, 25);
+        this.ctx.fillText('HIGH SCORE', this.width / 2, 10);
         this.ctx.fillStyle = 'white';
-        this.ctx.fillText(this.highScore.toString().padStart(6, '0'), this.width / 2, 45);
+        this.ctx.fillText(this.highScore.toString().padStart(6, '0'), this.width / 2, 30);
 
         // 3. LIFE (Right Bottom)
-        // Since lives = 1, just draw one small ship
-        const lifeX = this.width - 60;
-        const lifeY = this.height - 45;
         const lifeSize = 20;
+        const lifeX = this.width - uiPadding - lifeSize;
+        const lifeY = this.height - uiPadding - lifeSize;
         
         this.ctx.fillStyle = '#00ff00';
         this.ctx.beginPath();
@@ -197,22 +216,24 @@ export class Game {
         this.ctx.fill();
         
         this.ctx.fillStyle = 'white';
-        this.ctx.font = '14px Arial';
+        this.ctx.font = '14px "Courier New", Courier, monospace';
         this.ctx.textAlign = 'right';
-        this.ctx.fillText('LIFE', this.width - 20, this.height - 15);
+        this.ctx.textBaseline = 'middle';
+        this.ctx.fillText('LIFE', lifeX - 5, lifeY + lifeSize / 2);
 
         // Draw Game Over
         if (this.isGameOver) {
-            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+            this.ctx.textBaseline = 'alphabetic'; // Reset baseline for centered text
+            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
             this.ctx.fillRect(0, 0, this.width, this.height);
 
             this.ctx.fillStyle = '#ff0000';
-            this.ctx.font = 'bold 50px Arial';
+            this.ctx.font = 'bold 50px "Courier New", Courier, monospace';
             this.ctx.textAlign = 'center';
             this.ctx.fillText('GAME OVER', this.width / 2, this.height / 2 - 20);
             
             this.ctx.fillStyle = 'white';
-            this.ctx.font = '25px Arial';
+            this.ctx.font = '24px "Courier New", Courier, monospace';
             this.ctx.fillText(`FINAL SCORE: ${this.score}`, this.width / 2, this.height / 2 + 40);
             
             if (this.score >= this.highScore && this.score > 0) {
@@ -221,7 +242,7 @@ export class Game {
             }
 
             this.ctx.fillStyle = '#aaa';
-            this.ctx.font = '18px Arial';
+            this.ctx.font = '18px "Courier New", Courier, monospace';
             this.ctx.fillText('Press F5 to Restart', this.width / 2, this.height / 2 + 130);
         }
     }
