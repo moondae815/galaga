@@ -76,8 +76,10 @@ export class Game {
             if (e.code === 'Space') {
                 if (this.gameState === 'START') {
                     this.gameState = 'PLAY';
+                    this.audio.playStartSound();
                 } else if (this.gameState === 'GAMEOVER') {
                     this.resetGame();
+                    this.audio.playStartSound();
                 }
             }
         });
