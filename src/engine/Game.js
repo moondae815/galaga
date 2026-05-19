@@ -14,6 +14,7 @@ export class Game {
         this.bullets = [];
         this.enemies = [];
         this.score = 0;
+        this.isGameOver = false;
         this.lastTime = 0;
         this.keys = {};
 
@@ -70,16 +71,21 @@ export class Game {
     }
 
     update(deltaTime) {
+        if (this.isGameOver) return;
+
         this.starfield.update(deltaTime);
         
-        const newBullet = this.player.update(deltaTime, this.keys);
-        if (newBullet) {
-            this.bullets.push(newBullet);
+        if (this.player.active) {
+            const newBullet = this.player.update(deltaTime, this.keys);
+            if (newBullet) {
+                this.bullets.push(newBullet);
+            }
         }
 
         // 1. Update all entities
         this.bullets.forEach(bullet => bullet.update(deltaTime));
-        this.enemies.forEach(enemy => enemy.update(deltaTime));
+        const playerX = this.player.active ? this.player.x + this.player.width / 2 : undefined;
+        this.enemies.forEach(enemy => enemy.update(deltaTime, playerX, this.height));
 
         // 2. Collision Check
         this.checkCollisions();
@@ -90,15 +96,19 @@ export class Game {
     }
 
     checkCollisions() {
-        for (const bullet of this.bullets) {
-            if (!bullet.active) continue;
+        if (!this.player.active) return;
 
-            const bulletBounds = bullet.getBounds();
+        const playerBounds = this.player.getBounds();
 
-            for (const enemy of this.enemies) {
-                if (!enemy.active) continue;
+        for (const enemy of this.enemies) {
+            if (!enemy.active) continue;
 
-                const enemyBounds = enemy.getBounds();
+            const enemyBounds = enemy.getBounds();
+
+            // Bullet vs Enemy
+            for (const bullet of this.bullets) {
+                if (!bullet.active) continue;
+                const bulletBounds = bullet.getBounds();
 
                 if (bulletBounds.x < enemyBounds.x + enemyBounds.width &&
                     bulletBounds.x + bulletBounds.width > enemyBounds.x &&
@@ -108,8 +118,19 @@ export class Game {
                     bullet.active = false;
                     enemy.active = false;
                     this.score += enemy.score;
-                    break;
                 }
+            }
+
+            // Player vs Enemy
+            if (enemy.active &&
+                playerBounds.x < enemyBounds.x + enemyBounds.width &&
+                playerBounds.x + playerBounds.width > enemyBounds.x &&
+                playerBounds.y < enemyBounds.y + enemyBounds.height &&
+                playerBounds.y + playerBounds.height > enemyBounds.y) {
+                
+                this.player.active = false;
+                this.isGameOver = true;
+                break;
             }
         }
     }
@@ -133,12 +154,31 @@ export class Game {
         });
 
         // Draw player
-        this.player.draw(this.ctx);
+        if (this.player.active) {
+            this.player.draw(this.ctx);
+        }
 
         // Draw Score
         this.ctx.fillStyle = 'white';
         this.ctx.font = '20px Arial';
         this.ctx.textAlign = 'left';
         this.ctx.fillText(`SCORE: ${this.score}`, 20, 30);
+
+        // Draw Game Over
+        if (this.isGameOver) {
+            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            this.ctx.fillRect(0, 0, this.width, this.height);
+
+            this.ctx.fillStyle = 'white';
+            this.ctx.font = '50px Arial';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText('GAME OVER', this.width / 2, this.height / 2);
+            
+            this.ctx.font = '25px Arial';
+            this.ctx.fillText(`FINAL SCORE: ${this.score}`, this.width / 2, this.height / 2 + 50);
+            
+            this.ctx.font = '20px Arial';
+            this.ctx.fillText('Press F5 to Refresh', this.width / 2, this.height / 2 + 100);
+        }
     }
 }
