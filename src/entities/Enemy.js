@@ -36,15 +36,16 @@ export class Enemy extends Entity {
                 this.state = 'ATTACKING';
             }
         } else if (this.state === 'ATTACKING') {
-            // Move down faster
-            this.y += this.speed * 1.5;
+            // Move down faster - applying deltaTime
+            const speedPerMs = this.speed / 16.67;
+            this.y += speedPerMs * 1.5 * deltaTime;
 
             // Slight tracking of player
             if (playerX !== undefined) {
                 const centerX = this.x + this.width / 2;
                 const diffX = playerX - centerX;
                 if (Math.abs(diffX) > 5) {
-                    this.x += Math.sign(diffX) * 1.5;
+                    this.x += Math.sign(diffX) * speedPerMs * 0.75 * deltaTime;
                 }
             }
 
