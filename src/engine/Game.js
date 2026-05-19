@@ -45,6 +45,9 @@ export class Game {
     initInput() {
         window.addEventListener('keydown', (e) => {
             this.keys[e.code] = true;
+            if (e.code === 'Space' && this.gameState === 'START') {
+                this.gameState = 'PLAY';
+            }
         });
         window.addEventListener('keyup', (e) => {
             this.keys[e.code] = false;
@@ -222,8 +225,21 @@ export class Game {
         this.ctx.textBaseline = 'middle';
         this.ctx.fillText('LIFE', lifeX - 5, lifeY + lifeSize / 2);
 
-        // Draw Game Over
-        if (this.gameState === 'GAMEOVER') {
+        // Draw Game Over or Title Screen
+        if (this.gameState === 'START') {
+            this.ctx.textBaseline = 'alphabetic';
+            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+            this.ctx.fillRect(0, 0, this.width, this.height);
+
+            this.ctx.fillStyle = '#ffff00';
+            this.ctx.font = 'bold 50px "Courier New", Courier, monospace';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText('GALAGA CLONE', this.width / 2, this.height / 2 - 20);
+            
+            this.ctx.fillStyle = 'white';
+            this.ctx.font = '24px "Courier New", Courier, monospace';
+            this.ctx.fillText('PRESS SPACE TO START', this.width / 2, this.height / 2 + 40);
+        } else if (this.gameState === 'GAMEOVER') {
             this.ctx.textBaseline = 'alphabetic'; // Reset baseline for centered text
             this.ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
             this.ctx.fillRect(0, 0, this.width, this.height);
