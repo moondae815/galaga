@@ -13,6 +13,7 @@ export class Game {
         this.player = new Player(this.width, this.height);
         this.bullets = [];
         this.enemies = [];
+        this.score = 0;
         this.lastTime = 0;
         this.keys = {};
 
@@ -82,8 +83,37 @@ export class Game {
             return bullet.active;
         });
 
-        // Update enemies
-        this.enemies.forEach(enemy => enemy.update(deltaTime));
+        // Update and filter enemies
+        this.enemies = this.enemies.filter(enemy => {
+            enemy.update(deltaTime);
+            return enemy.active;
+        });
+
+        this.checkCollisions();
+    }
+
+    checkCollisions() {
+        this.bullets.forEach(bullet => {
+            if (!bullet.active) return;
+
+            const bulletBounds = bullet.getBounds();
+
+            this.enemies.forEach(enemy => {
+                if (!enemy.active) return;
+
+                const enemyBounds = enemy.getBounds();
+
+                if (bulletBounds.x < enemyBounds.x + enemyBounds.width &&
+                    bulletBounds.x + bulletBounds.width > enemyBounds.x &&
+                    bulletBounds.y < enemyBounds.y + enemyBounds.height &&
+                    bulletBounds.y + bulletBounds.height > enemyBounds.y) {
+                    
+                    bullet.active = false;
+                    enemy.active = false;
+                    this.score += enemy.score;
+                }
+            });
+        });
     }
 
     draw() {
@@ -102,5 +132,11 @@ export class Game {
 
         // Draw player
         this.player.draw(this.ctx);
+
+        // Draw Score
+        this.ctx.fillStyle = 'white';
+        this.ctx.font = '20px Arial';
+        this.ctx.textAlign = 'left';
+        this.ctx.fillText(`SCORE: ${this.score}`, 20, 30);
     }
 }

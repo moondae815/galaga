@@ -16,6 +16,7 @@ export class Enemy extends Entity {
         this.type = type;
         this.color = ENEMY_TYPES[type]?.color || '#ffffff';
         this.score = ENEMY_TYPES[type]?.score || 0;
+        this.active = true;
         this.state = 'IDLE';
         
         // Oscillation properties
