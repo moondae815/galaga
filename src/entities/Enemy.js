@@ -55,15 +55,18 @@ export class Enemy extends Entity {
                 this.state = 'RETURNING';
             }
         } else if (this.state === 'RETURNING') {
+            const speedPerMs = this.speed / 16.67;
             // Move down to original position
-            this.y += this.speed;
+            this.y += speedPerMs * deltaTime;
 
-            // Return to baseX
+            // Return to baseX with smoother movement (Lerp-like)
             const diffX = this.baseX - this.x;
-            if (Math.abs(diffX) < 2) {
+            if (Math.abs(diffX) < 1) {
                 this.x = this.baseX;
             } else {
-                this.x += Math.sign(diffX) * 2;
+                // Move a portion of the distance per frame (at 60fps)
+                const lerpFactor = 1 - Math.pow(0.9, deltaTime / 16.67);
+                this.x += diffX * lerpFactor;
             }
 
             // Once reached original formation Y, go back to IDLE
