@@ -25,10 +25,11 @@ export class Enemy extends Entity {
         
         this.state = 'ENTERING';
         this.enterProgress = 0;
-        this.startX = -50;
-        this.startY = -50;
-        this.controlX = x;
-        this.controlY = y - 50;
+        const sideMultiplier = Math.random() > 0.5 ? 1 : -1;
+        this.startX = x + (200 * sideMultiplier) + (Math.random() * 100 * sideMultiplier);
+        this.startY = -50 - Math.random() * 100;
+        this.controlX = x + (150 * sideMultiplier);
+        this.controlY = y - 100 - Math.random() * 100;
         
         // Oscillation properties - scaled by difficulty
         this.baseX = x;
@@ -58,8 +59,8 @@ export class Enemy extends Entity {
                 this.y = this.baseY;
             } else {
                 const t = this.enterProgress;
-                this.x = Math.pow(1 - t, 2) * this.startX + 2 * (1 - t) * t * this.controlX + Math.pow(t, 2) * this.baseX;
-                this.y = Math.pow(1 - t, 2) * this.startY + 2 * (1 - t) * t * this.controlY + Math.pow(t, 2) * this.baseY;
+                this.x = this._calculateBezierPoint(t, this.startX, this.controlX, this.baseX);
+                this.y = this._calculateBezierPoint(t, this.startY, this.controlY, this.baseY);
             }
         } else if (this.state === 'IDLE') {
             this.oscillationAngle += this.oscillationSpeed * deltaTime;
@@ -119,6 +120,10 @@ export class Enemy extends Entity {
         }
 
         return firedBullet;
+    }
+
+    _calculateBezierPoint(t, p0, p1, p2) {
+        return Math.pow(1 - t, 2) * p0 + 2 * (1 - t) * t * p1 + Math.pow(t, 2) * p2;
     }
 
     shoot() {
