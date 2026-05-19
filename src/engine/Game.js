@@ -49,11 +49,11 @@ export class Game {
             this.bullets.push(newBullet);
         }
 
-        // Update bullets
-        this.bullets.forEach(bullet => bullet.update(deltaTime));
-
-        // Remove inactive bullets
-        this.bullets = this.bullets.filter(bullet => bullet.active);
+        // Update and filter bullets
+        this.bullets = this.bullets.filter(bullet => {
+            bullet.update(deltaTime);
+            return bullet.active;
+        });
     }
 
     draw() {
