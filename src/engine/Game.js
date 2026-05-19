@@ -77,29 +77,26 @@ export class Game {
             this.bullets.push(newBullet);
         }
 
-        // Update and filter bullets
-        this.bullets = this.bullets.filter(bullet => {
-            bullet.update(deltaTime);
-            return bullet.active;
-        });
+        // 1. Update all entities
+        this.bullets.forEach(bullet => bullet.update(deltaTime));
+        this.enemies.forEach(enemy => enemy.update(deltaTime));
 
-        // Update and filter enemies
-        this.enemies = this.enemies.filter(enemy => {
-            enemy.update(deltaTime);
-            return enemy.active;
-        });
-
+        // 2. Collision Check
         this.checkCollisions();
+
+        // 3. Filter inactive entities
+        this.bullets = this.bullets.filter(bullet => bullet.active);
+        this.enemies = this.enemies.filter(enemy => enemy.active);
     }
 
     checkCollisions() {
-        this.bullets.forEach(bullet => {
-            if (!bullet.active) return;
+        for (const bullet of this.bullets) {
+            if (!bullet.active) continue;
 
             const bulletBounds = bullet.getBounds();
 
-            this.enemies.forEach(enemy => {
-                if (!enemy.active) return;
+            for (const enemy of this.enemies) {
+                if (!enemy.active) continue;
 
                 const enemyBounds = enemy.getBounds();
 
@@ -111,9 +108,10 @@ export class Game {
                     bullet.active = false;
                     enemy.active = false;
                     this.score += enemy.score;
+                    break;
                 }
-            });
-        });
+            }
+        }
     }
 
     draw() {
@@ -125,10 +123,14 @@ export class Game {
         this.starfield.draw(this.ctx);
 
         // Draw enemies
-        this.enemies.forEach(enemy => enemy.draw(this.ctx));
+        this.enemies.forEach(enemy => {
+            if (enemy.active) enemy.draw(this.ctx);
+        });
 
         // Draw bullets
-        this.bullets.forEach(bullet => bullet.draw(this.ctx));
+        this.bullets.forEach(bullet => {
+            if (bullet.active) bullet.draw(this.ctx);
+        });
 
         // Draw player
         this.player.draw(this.ctx);
