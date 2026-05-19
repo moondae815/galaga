@@ -15,7 +15,8 @@ export class Game {
         this.enemies = [];
         this.score = 0;
         this.highScore = this.loadHighScore();
-        this.isGameOver = false;
+        this.gameState = 'START';
+        this.currentStage = 1;
         this.lastTime = 0;
         this.keys = {};
 
@@ -90,7 +91,7 @@ export class Game {
     }
 
     update(deltaTime) {
-        if (this.isGameOver) return;
+        if (this.gameState !== 'PLAY') return;
 
         this.starfield.update(deltaTime);
         
@@ -154,7 +155,7 @@ export class Game {
                 playerBounds.y + playerBounds.height > enemyBounds.y) {
                 
                 this.player.active = false;
-                this.isGameOver = true;
+                this.gameState = 'GAMEOVER';
                 break;
             }
         }
@@ -222,7 +223,7 @@ export class Game {
         this.ctx.fillText('LIFE', lifeX - 5, lifeY + lifeSize / 2);
 
         // Draw Game Over
-        if (this.isGameOver) {
+        if (this.gameState === 'GAMEOVER') {
             this.ctx.textBaseline = 'alphabetic'; // Reset baseline for centered text
             this.ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
             this.ctx.fillRect(0, 0, this.width, this.height);
