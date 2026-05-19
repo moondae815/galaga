@@ -14,6 +14,7 @@ export class Game {
         this.bullets = [];
         this.enemies = [];
         this.score = 0;
+        this.highScore = parseInt(localStorage.getItem('galaga_high_score')) || 0;
         this.isGameOver = false;
         this.lastTime = 0;
         this.keys = {};
