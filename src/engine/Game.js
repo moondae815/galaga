@@ -2,6 +2,7 @@ import { Starfield } from '../entities/Starfield.js';
 import { Player } from '../entities/Player.js';
 import { Enemy } from '../entities/Enemy.js';
 import { Particle } from '../entities/Particle.js';
+import { AudioManager } from './AudioManager.js';
 
 export class Game {
     constructor(canvasId) {
@@ -10,6 +11,7 @@ export class Game {
         this.width = canvas.width;
         this.height = canvas.height;
         
+        this.audio = new AudioManager();
         this.starfield = new Starfield(this.width, this.height);
         this.player = new Player(this.width, this.height);
         this.bullets = [];
@@ -64,6 +66,13 @@ export class Game {
     initInput() {
         window.addEventListener('keydown', (e) => {
             this.keys[e.code] = true;
+
+            // Initialize/Resume Audio Context on first user interaction
+            if (!this.audio.initialized) {
+                this.audio.init();
+            }
+            this.audio.resume();
+
             if (e.code === 'Space') {
                 if (this.gameState === 'START') {
                     this.gameState = 'PLAY';
@@ -133,6 +142,7 @@ export class Game {
             const newBullet = this.player.update(deltaTime, this.keys);
             if (newBullet) {
                 this.bullets.push(newBullet);
+                this.audio.playShootSound();
             }
         }
 
@@ -194,6 +204,8 @@ export class Game {
                     enemy.active = false;
                     this.score += enemy.score;
 
+                    this.audio.playExplosionSound();
+
                     // Create explosion particles
                     for (let i = 0; i < 15; i++) {
                         this.particles.push(new Particle(
@@ -211,6 +223,8 @@ export class Game {
                         this.highScore = this.score;
                         this.saveHighScore();
                     }
+
+                    break; // Enemy destroyed, stop checking other bullets for this enemy
                 }
             }
 
@@ -245,9 +259,12 @@ export class Game {
 
     handlePlayerHit() {
         this.lives--;
+        this.audio.playExplosionSound(); // Play explosion when player is hit too
+
         if (this.lives <= 0) {
             this.player.active = false;
             this.gameState = 'GAMEOVER';
+            this.audio.playGameOverSound();
         } else {
             // Reset player position and set invincibility
             this.player.x = (this.width - this.player.width) / 2;
